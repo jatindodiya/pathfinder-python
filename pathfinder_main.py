@@ -1,4 +1,5 @@
 import pygame
+#import algorithm
 from tkinter import *
 import os
 
@@ -21,9 +22,9 @@ pygame.init()
 pygame.display.set_caption("Path Finder Algorithm visualisation")
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('comicsans', 30, True)
-#bg = pygame.image.load('photos/bg.jpg')
+bg = pygame.image.load('photos/bg.jpg')
 mainScreen = pygame.display.set_mode([screen_width, screen_height])  # main screen object and final setup
-#mainScreen.blit(bg, (0, 0))
+mainScreen.blit(bg, (0, 0))
 
 
 class rect(object):
@@ -77,7 +78,7 @@ def displayMessage(message, fontSize, height):
 # this is space for grid spot
 
 
-sizeofarr = 50
+sizeofarr = 7
 spotHeight = screen_height // sizeofarr
 print(spotHeight)
 spotWidth = screen_width // sizeofarr

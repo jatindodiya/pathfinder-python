@@ -1,5 +1,4 @@
 import pygame
-#import algorithm
 from tkinter import *
 import os
 
@@ -7,33 +6,51 @@ import os
 red = (178, 34, 34)
 orange = (255, 110, 0)
 blue = (30, 144, 255)
-pink = (255, 20, 147)
+pink = (255, 105, 180)
 black = (0, 0, 0)
 aqua = (0, 255, 255)
+white = (220, 220, 220)
+
 # -----------------------------------------------------------------------------------------
-os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50, 50)
+os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (30, 30)
 root = Tk()
 root.title("Start Window")
 # root.iconbitmap('pyc.ico')
-screen_width = root.winfo_screenwidth() - 100  # screen window width
+screen_width = root.winfo_screenwidth() - 50  # screen window width
 screen_height = root.winfo_screenheight() - 100  # screen window height
+
+# --------------------------------------------------------------------------------------------
+# number between 2 - 200
+sizeofarr = 20
+# --------------------------------------------------------------------------------------------
+screen_width = screen_width - screen_width % sizeofarr
+screen_height = screen_height - screen_height % sizeofarr
 
 pygame.init()
 pygame.display.set_caption("Path Finder Algorithm visualisation")
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('comicsans', 30, True)
-bg = pygame.image.load('photos/bg.jpg')
-mainScreen = pygame.display.set_mode([screen_width, screen_height])  # main screen object and final setup
-mainScreen.blit(bg, (0, 0))
+mainScreen = pygame.display.set_mode([screen_width, screen_height + 30])  # main screen object and final setup
 
 
-class rect(object):
-    def __init__(self, x, y, width, height):
+
+# ------------------------------------------------------------------------------------------------
+# message box
+messagebox = pygame.draw.rect(mainScreen, black, (0, screen_height, screen_width, 30))
+# -------------------------------------------------------------------------------------------------
+
+class rectangle(object):
+    def __init__(self, x, y, width, height, posx, posy):
         self.x = x
         self.y = y
+        self.posx = posx
+        self.posy = posy
         self.width = width
         self.height = height
-        self.color = red
+        self.color = white
+        self.stpoint = False
+        self.edpoint = False
+        self.wall = False
 
     def drawrect(self):
         pygame.draw.rect(mainScreen, self.color, (self.x, self.y, self.width, self.height))
@@ -45,23 +62,27 @@ class rect(object):
 
     def start(self, color):
         self.color = color
+        self.stpoint = True
         pygame.draw.rect(mainScreen, self.color, (self.x, self.y, self.width, self.height))
         pygame.display.update()
 
-    def end(self):
-        pass
+    def end(self, color):
+        self.color = color
+        self.edpoint = True
+        pygame.draw.rect(mainScreen, self.color, (self.x, self.y, self.width, self.height))
+        pygame.display.update()
 
     def path(self):
         pass
 
 
 def onsubmit():
-    #global st
-    #global ed
+    # global st
+    # global ed
     st = startBox.get().split(',')
     ed = endBox.get().split(',')
     spots[int(st[0])][int(st[1])].start(orange)
-    spots[int(ed[0])][int(ed[1])].start(blue)
+    spots[int(ed[0])][int(ed[1])].end(blue)
     print(st)
     print(ed)
     root.quit()
@@ -74,26 +95,25 @@ def displayMessage(message, fontSize, height):
     mainScreen.blit(text, (200, height))
     pygame.display.update()
 
+
 # ----------------------------------------------------------------------------------------------------
 # this is space for grid spot
 
 
-sizeofarr = 7
 spotHeight = screen_height // sizeofarr
-print(spotHeight)
-spotWidth = screen_width // sizeofarr
-print(spotWidth)
-
-spots = [[0 for i in range(sizeofarr)] for j in range(sizeofarr)]
-for i in range(sizeofarr):
+sizeof = screen_width // spotHeight
+print(sizeofarr)
+print(sizeof)
+spots = [[0 for i in range(sizeofarr)] for j in range(sizeof)]
+for i in range(sizeof):
     for j in range(sizeofarr):
-        spots[i][j] = rect(i * spotWidth, j * spotHeight, spotWidth -0.5, spotHeight-0.5)
+        spots[i][j] = rectangle(i * spotHeight, j * spotHeight, spotHeight - 1, spotHeight - 1, i, j)
 
 for row in spots:
     for spot in row:
         spot.drawrect()
 
-# --------------------------------------------------input window---------------------------------------------------
+# --------------------------------------------------input window------------------------------------------
 frame = Frame(root)
 label = Label(frame, text='Start(x,y): ')
 startBox = Entry(frame)
@@ -107,10 +127,14 @@ startBox.grid(row=0, column=1, pady=3)
 label.grid(row=0, pady=3)
 
 
-# -----------------------------------------------------------------------------------------------------------------
+# ------------------------------------ Algorithms ---------------------------------------------------
+def astar():
+    pass
 
 
-def mydelay(miliSec):  # this function we created gives appprox delay in milisec
+# ---------------------------------------------------------------------------------------------------
+
+def mydelay(miliSec):          # this function we created gives appprox delay in milisec
     i = 0
     while i < miliSec:
         pygame.time.delay(1)
@@ -127,4 +151,3 @@ run = True
 while run:
     mydelay(100)
     pygame.display.update()
-

@@ -1,125 +1,274 @@
 import pygame
+import math
 from tkinter import *
+from queue import PriorityQueue
 import os
 
-# -----------------------------------color define-----------------------------------------
-red = (178, 34, 34)
-orange = (255, 110, 0)
-# -----------------------------------------------------------------------------------------
-os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50, 50)
-root = Tk()
-root.title("Start Window")
-# root.iconbitmap('pyc.ico')
-screen_width = root.winfo_screenwidth() - 100  # screen window width
-screen_height = root.winfo_screenheight() - 100  # screen window height
+
+os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (30, 30)
+window = Tk()
+screen_width = window.winfo_screenwidth() - 50  # screen window width
+screen_height = window.winfo_screenheight() - 100  # screen window height
+
+# --------------------------------------------------------------------------------------------
+# number between 2 - 200
+sizeofarr = 10
+showgrid = 1
+if sizeofarr >= 50:
+    showgrid = 0  # only 1 or 0
+# --------------------------------------------------------------------------------------------
+screen_width = screen_width - screen_width % sizeofarr
+screen_height = screen_height - screen_height % sizeofarr
 
 pygame.init()
 pygame.display.set_caption("Path Finder Algorithm visualisation")
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('comicsans', 30, True)
-bg = pygame.image.load('photos/bg.jpg')
-mainScreen = pygame.display.set_mode([screen_width, screen_height])  # main screen object and final setup
-mainScreen.blit(bg, (0, 0))
+WIN = pygame.display.set_mode([screen_width, screen_height + 30])  # main screen object and final setup
 
 
-class rect(object):
-    def __init__(self, x, y, width, height):
-        self.x = x
-        self.y = y
+# --------------------------------------------------------------------------------
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 255, 0)
+YELLOW = (255, 255, 0)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+PURPLE = (128, 0, 128)
+ORANGE = (255, 165 ,0)
+GREY = (128, 128, 128)
+TURQUOISE = (64, 224, 208)
+
+# ---------------------------------------------------------------------------
+
+class Spot:
+    def __init__(self, row, col, width, total_rows):
+        self.row = row
+        self.col = col
+        self.x = row * width
+        self.y = col * width
+        self.color = WHITE
+        self.neighbors = []
         self.width = width
-        self.height = height
-        self.color = red
+        self.total_rows = total_rows
 
-    def drawrect(self):
-        pygame.draw.rect(mainScreen, self.color, (self.x, self.y, self.width, self.height))
-        pygame.display.update()
+    def get_pos(self):
+        return self.row, self.col
 
-    def changecolor(self, color):
-        self.color = color
-        pygame.display.update()
+    def is_closed(self):
+        return self.color == RED
 
-    def start(self):
-        pass
+    def is_open(self):
+        return self.color == GREEN
 
-    def end(self):
-        pass
+    def is_barrier(self):
+        return self.color == BLACK
 
-    def path(self):
-        pass
+    def is_start(self):
+        return self.color == ORANGE
 
+    def is_end(self):
+        return self.color == TURQUOISE
 
-def onsubmit():
-    global st
-    global ed
-    st = startBox.get().split(',')
-    ed = endBox.get().split(',')
-    print(st)
-    print(ed)
-    root.quit()
-    root.destroy()
+    def reset(self):
+        self.color = WHITE
 
+    def make_start(self):
+        self.color = ORANGE
 
-def displayMessage(message, fontSize, height):
-    fonts = pygame.font.SysFont('comicsans', fontSize)
-    text = fonts.render(message, 0, (255, 0, 0))
-    mainScreen.blit(text, (200, height))
-    pygame.display.update()
+    def make_closed(self):
+        self.color = RED
 
-# ----------------------------------------------------------------------------------------------
-# this is space for grid spot
+    def make_open(self):
+        self.color = GREEN
 
+    def make_barrier(self):
+        self.color = BLACK
 
-sizeofarr = 7
-spotHeight = screen_height // sizeofarr
-print(spotHeight)
-spotWidth = screen_width // sizeofarr
-print(spotWidth)
+    def make_end(self):
+        self.color = TURQUOISE
 
-spots = [[0 for i in range(sizeofarr)] for j in range(sizeofarr)]
-for i in range(sizeofarr):
-    for j in range(sizeofarr):
-        spots[i][j] = rect(i * spotWidth, j * spotHeight, spotWidth - 1, spotHeight - 1)
+    def make_path(self):
+        self.color = PURPLE
 
-for row in spots:
-    for spot in row:
-        spot.drawrect()
+    def draw(self, win):
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.width))
 
-# --------------------------------------------------input window---------------------------------------------------
-frame = Frame(root)
-label = Label(frame, text='Start(x,y): ')
-startBox = Entry(frame)
-label1 = Label(frame, text='End(x,y): ')
-endBox = Entry(frame)
-submit = Button(frame, text='Submit', command=onsubmit)
-submit.grid(columnspan=2, row=3)
-label1.grid(row=1, pady=3)
-endBox.grid(row=1, column=1, pady=3)
-startBox.grid(row=0, column=1, pady=3)
-label.grid(row=0, pady=3)
+    def update_neighbors(self, grid):
+        self.neighbors = []
+        if self.row < self.total_rows - 1 and not grid[self.row + 1][self.col].is_barrier(): # DOWN
+            self.neighbors.append(grid[self.row + 1][self.col])
+
+        if self.row > 0 and not grid[self.row - 1][self.col].is_barrier(): # UP
+            self.neighbors.append(grid[self.row - 1][self.col])
+
+        if self.col < self.total_rows - 1 and not grid[self.row][self.col + 1].is_barrier(): # RIGHT
+            self.neighbors.append(grid[self.row][self.col + 1])
+
+        if self.col > 0 and not grid[self.row][self.col - 1].is_barrier(): # LEFT
+            self.neighbors.append(grid[self.row][self.col - 1])
+
+    def __lt__(self, other):
+        return False
 
 
-# -----------------------------------------------------------------------------------------------------------------
+def h(p1, p2):
+    x1, y1 = p1
+    x2, y2 = p2
+    return abs(x1 - x2) + abs(y1 - y2)
 
 
-def mydelay(miliSec):  # this function we created gives appprox delay in milisec
-    i = 0
-    while i < miliSec:
-        pygame.time.delay(1)
-        i += 1
+def reconstruct_path(came_from, current, draw):
+    while current in came_from:
+        current = came_from[current]
+        current.make_path()
+        draw()
+
+
+def algorithm(draw, grid, start, end):
+    count = 0
+    open_set = PriorityQueue()
+    open_set.put((0, count, start))
+    came_from = {}
+    g_score = {spot: float("inf") for row in grid for spot in row}
+    g_score[start] = 0
+    f_score = {spot: float("inf") for row in grid for spot in row}
+    f_score[start] = h(start.get_pos(), end.get_pos())
+
+    open_set_hash = {start}
+
+    while not open_set.empty():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                i = miliSec + 1
                 pygame.quit()
 
+        current = open_set.get()[2]
+        open_set_hash.remove(current)
 
-def main():
-    mydelay(100)
+        if current == end:
+            reconstruct_path(came_from, end, draw)
+            end.make_end()
+            return True
+
+        for neighbor in current.neighbors:
+            temp_g_score = g_score[current] + 1
+
+            if temp_g_score < g_score[neighbor]:
+                came_from[neighbor] = current
+                g_score[neighbor] = temp_g_score
+                f_score[neighbor] = temp_g_score + h(neighbor.get_pos(), end.get_pos())
+                if neighbor not in open_set_hash:
+                    count += 1
+                    open_set.put((f_score[neighbor], count, neighbor))
+                    open_set_hash.add(neighbor)
+                    neighbor.make_open()
+
+        draw()
+
+        if current != start:
+            current.make_closed()
+
+    return False
+
+
+def make_grid(rows, width):
+    grid = []
+    gap = width // rows
+    for i in range(rows):
+        grid.append([])
+        for j in range(rows):
+            spot = Spot(i, j, gap, rows)
+            grid[i].append(spot)
+
+    return grid
+
+
+def draw_grid(win, rows, width):
+    gap = width // rows
+    for i in range(rows):
+        pygame.draw.line(win, GREY, (0, i * gap), (width, i * gap))
+        for j in range(rows):
+            pygame.draw.line(win, GREY, (j * gap, 0), (j * gap, width))
+
+
+def draw(win, grid, rows, width):
+    win.fill(WHITE)
+
+    for row in grid:
+        for spot in row:
+            spot.draw(win)
+
+    draw_grid(win, rows, width)
     pygame.display.update()
-    spots[1][2].changecolor(orange)
 
 
-frame.pack()
-root.mainloop()
-run = True
-while run:
-    main()
+def get_clicked_pos(pos, rows, width):
+    gap = width // rows
+    y, x = pos
+
+    row = y // gap
+    col = x // gap
+
+    return row, col
+
+def displayMessage(message):  # message box
+    fonts = pygame.font.SysFont('comicsans', 40)
+    pygame.draw.rect(WIN,RED, (0, screen_height, screen_width, 30))
+    WIN.blit(fonts.render(message, True, BLUE), (20, screen_height + 3))
+    pygame.display.update()
+
+def main(win, width):
+    ROWS = 50
+    grid = make_grid(ROWS, width)
+
+    start = None
+    end = None
+
+    run = True
+    while run:
+        draw(win, grid, ROWS, width)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+            if pygame.mouse.get_pressed()[0]: # LEFT
+                pos = pygame.mouse.get_pos()
+                row, col = get_clicked_pos(pos, ROWS, width)
+                spot = grid[row][col]
+                if not start and spot != end:
+                    start = spot
+                    start.make_start()
+
+                elif not end and spot != start:
+                    end = spot
+                    end.make_end()
+
+                elif spot != end and spot != start:
+                    spot.make_barrier()
+
+            elif pygame.mouse.get_pressed()[2]: # RIGHT
+                pos = pygame.mouse.get_pos()
+                row, col = get_clicked_pos(pos, ROWS, width)
+                spot = grid[row][col]
+                spot.reset()
+                if spot == start:
+                    start = None
+                elif spot == end:
+                    end = None
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE and start and end:
+                    for row in grid:
+                        for spot in row:
+                            spot.update_neighbors(grid)
+
+                    algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end)
+
+                if event.key == pygame.K_c:
+                    start = None
+                    end = None
+                    grid = make_grid(ROWS, width)
+
+    pygame.quit()
+
+main(WIN, 800)

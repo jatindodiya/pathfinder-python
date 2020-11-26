@@ -24,7 +24,7 @@ pygame.init()
 pygame.display.set_caption("Path Finder Algorithm visualisation")
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('comicsans', 30, True)
-WIN = pygame.display.set_mode([screen_width, screen_height + 30])  # main screen object and final setup
+WIN = pygame.display.set_mode([screen_height, screen_height])  # main screen object and final setup
 
 
 # --------------------------------------------------------------------------------

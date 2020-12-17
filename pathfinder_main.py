@@ -1,5 +1,5 @@
 import pygame
-import math
+import time
 from tkinter import *
 from queue import PriorityQueue
 import os
@@ -24,8 +24,9 @@ pygame.init()
 pygame.display.set_caption("Path Finder Algorithm visualisation")
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('comicsans', 30, True)
-WIN = pygame.display.set_mode([screen_height, screen_height])  # main screen object and final setup
+WIN = pygame.display.set_mode([screen_height + 30, screen_height + 30])  # main screen object and final setup
 
+messagebox = pygame.draw.rect(WIN, (0,0,0), (0, screen_height, screen_width, 30))
 
 # --------------------------------------------------------------------------------
 RED = (255, 0, 0)
@@ -126,6 +127,7 @@ def reconstruct_path(came_from, current, draw):
 
 
 def algorithm(draw, grid, start, end):
+
     count = 0
     open_set = PriorityQueue()
     open_set.put((0, count, start))
@@ -261,8 +263,10 @@ def main(win, width):
                     for row in grid:
                         for spot in row:
                             spot.update_neighbors(grid)
-
+                    starttime = time.time()
                     algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end)
+                    endtime = time.time()
+                    print("Time taken = " + str(endtime-starttime) + " seconds")
 
                 if event.key == pygame.K_c:
                     start = None
